@@ -165,6 +165,7 @@ def room2blocks(data, label, num_point, block_size=1.0, stride=1.0,
        ycond = (data[:,1]<=ybeg+block_size) & (data[:,1]>=ybeg)
        cond = xcond & ycond
        if np.sum(cond) < 100: # discard block if there are less than 100 pts.
+           print("DISCARTED BLOCK")
            continue
        
        block_data = data[cond, :]
