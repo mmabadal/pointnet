@@ -1,0 +1,14 @@
+GENERATE DATA
+
+	data///---_txt/---.txt   (full pointcloud xyzrgb)
+	data///---_txt/Annotations/---.txt (xyzrgb of instance)
+
+	collect_indor3d_data.py  (generates .npy files of each pointcloud)
+
+
+	data/---.npy  (xyzrgbl of all instances)
+
+	gen_indoor3d_h5.py (generates .h5 containing all dataset)
+
+
+	data/---.h5 (files containing whole dataset)
