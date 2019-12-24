@@ -1,6 +1,10 @@
 import os
 import sys
 import argparse
+from natsort import natsorted
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(BASE_DIR)
+sys.path.append(BASE_DIR)
 import indoor3d_util
 
 '''
@@ -23,7 +27,7 @@ path_cls = parsed_args.path_cls
 if not os.path.exists(path_out):
     os.mkdir(path_out)
 
-for folder in sorted(os.listdir(path_in)):
+for folder in natsorted(os.listdir(path_in)):
 
     path_annotation = os.path.join(path_in, folder, "annotations")
     print(path_annotation)
