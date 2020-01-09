@@ -3,10 +3,23 @@ import glob
 import os
 import sys
 
-# g_class2color = {'pipe': [0,255,0], 'floor': [0,0,255]}
-# g_easy_view_labels = [7,8,9,10,11,1]
-# g_label2color = {g_classes.index(cls): g_class2color[cls] for cls in g_classes}
 
+
+def get_info_classes(cls_path):
+
+    classes = []
+    colors = []
+
+    for line in open(cls_path):
+        data = line.split()
+        classes.append(data[0])
+        colors.append([int(data[1]), int(data[2]), int(data[3])])
+
+    labels = {cls: i for i, cls in enumerate(classes)}
+
+    label2color = {classes.index(cls): colors[classes.index(cls)] for cls in classes}
+
+    return classes, labels, label2color
 
 # -----------------------------------------------------------------------------
 # CONVERT ORIGINAL DATA TO OUR DATA_LABEL FILES
@@ -27,8 +40,8 @@ def collect_point_label(anno_path, out_filename, cls_path, file_format='txt'):
     """
     points_list = []
 
-    g_classes = [x.rstrip() for x in open(cls_path)]
-    g_class2label = {cls: i for i, cls in enumerate(g_classes)}
+    g_classes, g_class2label, g_label2color = get_info_classes(cls_path)
+
     
     for f in glob.glob(os.path.join(anno_path, '*.txt')):
         cls = os.path.basename(f).split('_')[0]
@@ -55,23 +68,22 @@ def collect_point_label(anno_path, out_filename, cls_path, file_format='txt'):
             (file_format))
         exit()
 
-def point_label_to_obj(input_filename, out_filename, label_color=True, easy_view=False, no_wall=False):
+def point_label_to_obj(input_filename, out_filename, cls_path, label_color=True):
     """ For visualization of a room from data_label file,
 	input_filename: each line is X Y Z R G B L
 	out_filename: OBJ filename,
             visualize input file by coloring point with label color
         easy_view: only visualize furnitures and floor
     """
+
+    g_classes, g_class2label, g_label2color = get_info_classes(cls_path)
+
     data_label = np.loadtxt(input_filename)
     data = data_label[:, 0:6]
     label = data_label[:, -1].astype(int)
     fout = open(out_filename, 'w')
     for i in range(data.shape[0]):
         color = g_label2color[label[i]]
-        if easy_view and (label[i] not in g_easy_view_labels):
-            continue
-        if no_wall and ((label[i] == 2) or (label[i]==0)):
-            continue
         if label_color:
             fout.write('v %f %f %f %d %d %d\n' % \
                 (data[i,0], data[i,1], data[i,2], color[0], color[1], color[2]))
@@ -320,7 +332,7 @@ def room2samples_wrapper_normalized(data_label_filename, num_point):
 # EXTRACT INSTANCE BBOX FROM ORIGINAL DATA (for detection evaluation)
 # -----------------------------------------------------------------------------
 
-def collect_bounding_box(anno_path, out_filename):
+def collect_bounding_box(anno_path, out_filename, cls_path):
     """ Compute bounding boxes from each instance in original dataset files on
         one room. **We assume the bbox is aligned with XYZ coordinate.**
     
@@ -335,6 +347,8 @@ def collect_bounding_box(anno_path, out_filename):
         room points are shifted, the most negative point is now at origin.
     """
     bbox_label_list = []
+
+    g_classes, g_class2label, g_label2color = get_info_classes(cls_path)
 
     for f in glob.glob(os.path.join(anno_path, '*.txt')):
         cls = os.path.basename(f).split('_')[0]
@@ -362,7 +376,7 @@ def collect_bounding_box(anno_path, out_filename):
                        bbox_label[i,6]))
     fout.close()
 
-def bbox_label_to_obj(input_filename, out_filename_prefix, easy_view=False):
+def bbox_label_to_obj(input_filename, out_filename_prefix, cls_path):
     """ Visualization of bounding boxes.
     
     Args:
@@ -378,9 +392,10 @@ def bbox_label_to_obj(input_filename, out_filename_prefix, easy_view=False):
     label = bbox_label[:, -1].astype(int)
     v_cnt = 0 # count vertex
     ins_cnt = 0 # count instance
+
+    g_classes, g_class2label, g_label2color = get_info_classes(cls_path)
+
     for i in range(bbox.shape[0]):
-        if easy_view and (label[i] not in g_easy_view_labels):
-            continue
         obj_filename = out_filename_prefix+'_'+g_classes[label[i]]+'_'+str(ins_cnt)+'.obj'
         mtl_filename = out_filename_prefix+'_'+g_classes[label[i]]+'_'+str(ins_cnt)+'.mtl'
         fout_obj = open(obj_filename, 'w')
@@ -425,7 +440,7 @@ def bbox_label_to_obj(input_filename, out_filename_prefix, easy_view=False):
         v_cnt += 8
         ins_cnt += 1
 
-def bbox_label_to_obj_room(input_filename, out_filename_prefix, easy_view=False, permute=None, center=False, exclude_table=False):
+def bbox_label_to_obj_room(input_filename, out_filename_prefix, cls_path, permute=None, center=False):
     """ Visualization of bounding boxes.
     
     Args:
@@ -440,6 +455,9 @@ def bbox_label_to_obj_room(input_filename, out_filename_prefix, easy_view=False,
     """
     bbox_label = np.loadtxt(input_filename)
     bbox = bbox_label[:, 0:6]
+
+    g_classes, g_class2label, g_label2color = get_info_classes(cls_path)
+
     if permute is not None:
         assert(len(permute)==3)
         permute = np.array(permute)
@@ -460,10 +478,6 @@ def bbox_label_to_obj_room(input_filename, out_filename_prefix, easy_view=False,
     v_cnt = 0 # count vertex
     ins_cnt = 0 # count instance
     for i in range(bbox.shape[0]):
-        if easy_view and (label[i] not in g_easy_view_labels):
-            continue
-        if exclude_table and label[i] == g_classes.index('table'):
-            continue
 
         length = bbox[i, 3:6] - bbox[i, 0:3]
         a = length[0]
@@ -504,7 +518,7 @@ def bbox_label_to_obj_room(input_filename, out_filename_prefix, easy_view=False,
     fout_mtl.close() 
 
 
-def collect_point_bounding_box(anno_path, out_filename, file_format):
+def collect_point_bounding_box(anno_path, out_filename, file_format, cls_path):
     """ Compute bounding boxes from each instance in original dataset files on
         one room. **We assume the bbox is aligned with XYZ coordinate.**
         Save both the point XYZRGB and the bounding box for the point's
@@ -526,6 +540,8 @@ def collect_point_bounding_box(anno_path, out_filename, file_format):
         room points are shifted, the most negative point is now at origin.
     """
     point_bbox_list = []
+
+    g_classes, g_class2label, g_label2color = get_info_classes(cls_path)
 
     for f in glob.glob(os.path.join(anno_path, '*.txt')):
         cls = os.path.basename(f).split('_')[0]

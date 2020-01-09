@@ -7,29 +7,37 @@ sys.path.append(BASE_DIR)
 from model import *
 import indoor3d_util
 
+"python batch_inference.py --path_data a/b/c --path_cls meta/class_or.txt --model_path RUNS/test_indoor --dump_dir RUNS/test_indoor --room_data_filelist meta/test_indoor.txt --visu"
+
 parser = argparse.ArgumentParser()
+parser.add_argument('--path_data', help='folder with train test data')
+parser.add_argument('--path_cls', help='path to classes txt.')
 parser.add_argument('--gpu', type=int, default=0, help='GPU to use [default: GPU 0]')
 parser.add_argument('--batch_size', type=int, default=1, help='Batch Size during training [default: 1]')
 parser.add_argument('--num_point', type=int, default=4096, help='Point number [default: 4096]')
 parser.add_argument('--model_path', required=True, help='model checkpoint file path')
 parser.add_argument('--dump_dir', required=True, help='dump folder path')
-parser.add_argument('--output_filelist', required=True, help='TXT filename, filelist, each line is an output for a room')
 parser.add_argument('--room_data_filelist', required=True, help='TXT filename, filelist, each line is a test room data label file.')
 parser.add_argument('--no_clutter', action='store_true', help='If true, donot count the clutter class')
 parser.add_argument('--visu', action='store_true', help='Whether to output OBJ file for prediction visualization.')
-FLAGS = parser.parse_args()
+parsed_args = parser.parse_args()
 
-BATCH_SIZE = FLAGS.batch_size
-NUM_POINT = FLAGS.num_point
-MODEL_PATH = FLAGS.model_path
-GPU_INDEX = FLAGS.gpu
-DUMP_DIR = FLAGS.dump_dir
+path_data = parsed_args.path_data
+path_cls = parsed_args.path_cls
+cls = len(open(path_cls).readlines(  ))
+
+
+BATCH_SIZE = parsed_args.batch_size
+NUM_POINT = parsed_args.num_point
+MODEL_PATH = os.path.join(parsed_args.model_path, "model.ckpt")
+GPU_INDEX = parsed_args.gpu
+DUMP_DIR = os.path.join(parsed_args.dump_dir, "dump")
 if not os.path.exists(DUMP_DIR): os.mkdir(DUMP_DIR)
 LOG_FOUT = open(os.path.join(DUMP_DIR, 'log_evaluate.txt'), 'w')
-LOG_FOUT.write(str(FLAGS)+'\n')
-ROOM_PATH_LIST = [os.path.join(ROOT_DIR,line.rstrip()) for line in open(FLAGS.room_data_filelist)]
+LOG_FOUT.write(str(parsed_args)+'\n')
+ROOM_PATH_LIST = [os.path.join(ROOT_DIR,line.rstrip()) for line in open(parsed_args.room_data_filelist)]
 
-NUM_CLASSES = 13
+NUM_CLASSES = cls
 
 def log_string(out_str):
     LOG_FOUT.write(out_str+'\n')
@@ -71,7 +79,12 @@ def evaluate():
     
     total_correct = 0
     total_seen = 0
-    fout_out_filelist = open(FLAGS.output_filelist, 'w')
+
+    output_filelist = os.path.join(DUMP_DIR, "output_filelist.txt")
+    fout_out_filelist = open(output_filelist, 'w')
+
+    path_test = os.path.join(path_data, 'test/npy')
+
     for room_path in ROOM_PATH_LIST:
         out_data_label_filename = os.path.basename(room_path)[:-4] + '_pred.txt'
         out_data_label_filename = os.path.join(DUMP_DIR, out_data_label_filename)
@@ -93,7 +106,7 @@ def eval_one_epoch(sess, ops, room_path, out_data_label_filename, out_gt_label_f
     loss_sum = 0
     total_seen_class = [0 for _ in range(NUM_CLASSES)]
     total_correct_class = [0 for _ in range(NUM_CLASSES)]
-    if FLAGS.visu:
+    if parsed_args.visu:
         fout = open(os.path.join(DUMP_DIR, os.path.basename(room_path)[:-4]+'_pred.obj'), 'w')
         fout_gt = open(os.path.join(DUMP_DIR, os.path.basename(room_path)[:-4]+'_gt.obj'), 'w')
     fout_data_label = open(out_data_label_filename, 'w')
@@ -125,7 +138,7 @@ def eval_one_epoch(sess, ops, room_path, out_data_label_filename, out_gt_label_f
         loss_val, pred_val = sess.run([ops['loss'], ops['pred_softmax']],
                                       feed_dict=feed_dict)
 
-        if FLAGS.no_clutter:
+        if parsed_args.no_clutter:
             pred_label = np.argmax(pred_val[:,:,0:12], 2) # BxN
         else:
             pred_label = np.argmax(pred_val, 2) # BxN
@@ -139,9 +152,12 @@ def eval_one_epoch(sess, ops, room_path, out_data_label_filename, out_gt_label_f
             pts[:,3:6] *= 255.0
             pred = pred_label[b, :]
             for i in range(NUM_POINT):
-                color = indoor3d_util.g_label2color[pred[i]]
-                color_gt = indoor3d_util.g_label2color[current_label[start_idx+b, i]]
-                if FLAGS.visu:
+
+                g_classes, g_class2label, g_label2color = indoor3d_util.get_info_classes(path_cls)
+                color = g_label2color[pred[i]]
+                color_gt = g_label2color[current_label[start_idx+b, i]]
+
+                if parsed_args.visu:
                     fout.write('v %f %f %f %d %d %d\n' % (pts[i,6], pts[i,7], pts[i,8], color[0], color[1], color[2]))
                     fout_gt.write('v %f %f %f %d %d %d\n' % (pts[i,6], pts[i,7], pts[i,8], color_gt[0], color_gt[1], color_gt[2]))
                 fout_data_label.write('%f %f %f %d %d %d %f %d\n' % (pts[i,6], pts[i,7], pts[i,8], pts[i,3], pts[i,4], pts[i,5], pred_val[b,i,pred[i]], pred[i]))
@@ -160,7 +176,7 @@ def eval_one_epoch(sess, ops, room_path, out_data_label_filename, out_gt_label_f
     log_string('eval accuracy: %f'% (total_correct / float(total_seen)))
     fout_data_label.close()
     fout_gt_label.close()
-    if FLAGS.visu:
+    if parsed_args.visu:
         fout.close()
         fout_gt.close()
     return total_correct, total_seen
@@ -170,3 +186,4 @@ if __name__=='__main__':
     with tf.Graph().as_default():
         evaluate()
     LOG_FOUT.close()
+    
