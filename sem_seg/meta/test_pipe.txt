@@ -1,1 +1,0 @@
-/DATA/pipes/3d_pointnet/test_dataset/test/npy/pipes_3.npy

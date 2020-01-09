@@ -1,6 +1,7 @@
 import argparse
 import os
 import sys
+import re
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(BASE_DIR)
 sys.path.append(BASE_DIR)
@@ -24,7 +25,7 @@ parsed_args = parser.parse_args()
 
 path_data = parsed_args.path_data
 path_cls = parsed_args.path_cls
-cls = len(open(path_cls).readlines(  ))
+NUM_CLASSES = len(open(path_cls).readlines(  ))
 
 
 BATCH_SIZE = parsed_args.batch_size
@@ -37,7 +38,8 @@ LOG_FOUT = open(os.path.join(DUMP_DIR, 'log_evaluate.txt'), 'w')
 LOG_FOUT.write(str(parsed_args)+'\n')
 ROOM_PATH_LIST = [os.path.join(ROOT_DIR,line.rstrip()) for line in open(parsed_args.room_data_filelist)]
 
-NUM_CLASSES = cls
+path_test = os.path.join(path_data, 'test/npy')
+
 
 def log_string(out_str):
     LOG_FOUT.write(out_str+'\n')
@@ -85,16 +87,20 @@ def evaluate():
 
     path_test = os.path.join(path_data, 'test/npy')
 
-    for room_path in ROOM_PATH_LIST:
-        out_data_label_filename = os.path.basename(room_path)[:-4] + '_pred.txt'
-        out_data_label_filename = os.path.join(DUMP_DIR, out_data_label_filename)
-        out_gt_label_filename = os.path.basename(room_path)[:-4] + '_gt.txt'
-        out_gt_label_filename = os.path.join(DUMP_DIR, out_gt_label_filename)
-        print(room_path, out_data_label_filename)
-        a, b = eval_one_epoch(sess, ops, room_path, out_data_label_filename, out_gt_label_filename)
-        total_correct += a
-        total_seen += b
-        fout_out_filelist.write(out_data_label_filename+'\n')
+    for root, dirs, files in os.walk(path_test):  # for each folder
+
+        for file in enumerate(files):  # for each file in the folder
+            if re.search("\.(npy)$", file[1]):  # if the file is an image
+                filepath = os.path.join(root, file[1])  # file path
+                out_data_label_filename = os.path.basename(filepath)[:-4] + '_pred.txt'
+                out_data_label_filename = os.path.join(DUMP_DIR, out_data_label_filename)
+                out_gt_label_filename = os.path.basename(filepath)[:-4] + '_gt.txt'
+                out_gt_label_filename = os.path.join(DUMP_DIR, out_gt_label_filename)
+                print(filepath, out_data_label_filename)
+                a, b = eval_one_epoch(sess, ops, filepath, out_data_label_filename, out_gt_label_filename)
+                total_correct += a
+                total_seen += b
+                fout_out_filelist.write(out_data_label_filename+'\n')
     fout_out_filelist.close()
     log_string('all room eval accuracy: %f'% (total_correct / float(total_seen)))
 
@@ -186,4 +192,3 @@ if __name__=='__main__':
     with tf.Graph().as_default():
         evaluate()
     LOG_FOUT.close()
-    
