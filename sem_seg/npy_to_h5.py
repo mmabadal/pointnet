@@ -100,10 +100,10 @@ for i, data_label_filename in enumerate(data_label_files):  # for npy
 filelist.close()
 print("Total samples: {0}".format(sample_cnt))
 
-allfiles = open(os.path.join(path_out, 'all_files.txt'), 'w')
+allfiles = open(os.path.join(path_out, 'files.txt'), 'w')
 
 for i in range(h5_index):
-    h5_filename = os.path.join('data_' + str(h5_index-1) + '.h5')
+    h5_filename = os.path.join('data_' + str(i) + '.h5')
     allfiles.write(os.path.basename(h5_filename)+'\n')
 
 allfiles.close()

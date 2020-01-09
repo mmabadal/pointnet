@@ -16,7 +16,12 @@ import provider
 import tf_util
 from model import *
 
+
+"RUN python train.py --path_data a/b/c --cls 13 --log_dir RUNS/a --batch_size 10 --max_epoch 50"
+
 parser = argparse.ArgumentParser()
+parser.add_argument('--path_data', help='folder with train test data')
+parser.add_argument('--cls', type=int, help='number of classes')
 parser.add_argument('--gpu', type=int, default=0, help='GPU to use [default: GPU 0]')
 parser.add_argument('--log_dir', default='log', help='Log dir [default: log]')
 parser.add_argument('--num_point', type=int, default=4096, help='Point number [default: 4096]')
@@ -27,31 +32,30 @@ parser.add_argument('--momentum', type=float, default=0.9, help='Initial learnin
 parser.add_argument('--optimizer', default='adam', help='adam or momentum [default: adam]')
 parser.add_argument('--decay_step', type=int, default=300000, help='Decay step for lr decay [default: 300000]')
 parser.add_argument('--decay_rate', type=float, default=0.5, help='Decay rate for lr decay [default: 0.5]')
-parser.add_argument('--test_area', type=int, default=6, help='Which area to use for test, option: 1-6 [default: 6]')
-FLAGS = parser.parse_args()
+parsed_args = parser.parse_args()
 
+path_data = parsed_args.path_data
+cls = parsed_args.cls
+BATCH_SIZE = parsed_args.batch_size
+NUM_POINT = parsed_args.num_point
+MAX_EPOCH = parsed_args.max_epoch
+NUM_POINT = parsed_args.num_point
+BASE_LEARNING_RATE = parsed_args.learning_rate
+GPU_INDEX = parsed_args.gpu
+MOMENTUM = parsed_args.momentum
+OPTIMIZER = parsed_args.optimizer
+DECAY_STEP = parsed_args.decay_step
+DECAY_RATE = parsed_args.decay_rate
 
-BATCH_SIZE = FLAGS.batch_size
-NUM_POINT = FLAGS.num_point
-MAX_EPOCH = FLAGS.max_epoch
-NUM_POINT = FLAGS.num_point
-BASE_LEARNING_RATE = FLAGS.learning_rate
-GPU_INDEX = FLAGS.gpu
-MOMENTUM = FLAGS.momentum
-OPTIMIZER = FLAGS.optimizer
-DECAY_STEP = FLAGS.decay_step
-DECAY_RATE = FLAGS.decay_rate
-
-LOG_DIR = FLAGS.log_dir
+LOG_DIR = parsed_args.log_dir
 if not os.path.exists(LOG_DIR): os.mkdir(LOG_DIR)
 os.system('cp model.py %s' % (LOG_DIR)) # bkp of model def
 os.system('cp train.py %s' % (LOG_DIR)) # bkp of train procedure
 LOG_FOUT = open(os.path.join(LOG_DIR, 'log_train.txt'), 'w')
-LOG_FOUT.write(str(FLAGS)+'\n')
+LOG_FOUT.write(str(parsed_args)+'\n')
 
 MAX_NUM_POINT = 4096
-NUM_CLASSES = 13
-
+NUM_CLASSES = cls
 BN_INIT_DECAY = 0.5
 BN_DECAY_DECAY_RATE = 0.5
 #BN_DECAY_DECAY_STEP = float(DECAY_STEP * 2)
@@ -60,39 +64,39 @@ BN_DECAY_CLIP = 0.99
 
 HOSTNAME = socket.gethostname()
 
-ALL_FILES = provider.getDataFiles('indoor3d_sem_seg_hdf5_data/all_files.txt')
-room_filelist = [line.rstrip() for line in open('indoor3d_sem_seg_hdf5_data/room_filelist.txt')]
+# ------------------------ OK ------------------------
+path_train = os.path.join(path_data, 'train/h5')
+files_train = provider.getDataFiles(os.path.join(path_train, 'files.txt'))
+filelist_train = provider.getDataFiles(os.path.join(path_train, 'filelist.txt'))
 
-# Load ALL data
 data_batch_list = []
 label_batch_list = []
-for h5_filename in ALL_FILES:
-    data_batch, label_batch = provider.loadDataFile(h5_filename)
+
+for h5_filename in files_train:
+    file_path = os.path.join(path_train, h5_filename)
+    data_batch, label_batch = provider.loadDataFile(file_path)
     data_batch_list.append(data_batch)
     label_batch_list.append(label_batch)
-data_batches = np.concatenate(data_batch_list, 0)
-label_batches = np.concatenate(label_batch_list, 0)
-print(data_batches.shape)
-print(label_batches.shape)
-
-test_area = 'Area_'+str(FLAGS.test_area)
-train_idxs = []
-test_idxs = []
-for i,room_name in enumerate(room_filelist):
-    if test_area in room_name:
-        test_idxs.append(i)
-    else:
-        train_idxs.append(i)
-
-train_data = data_batches[train_idxs,...]
-train_label = label_batches[train_idxs]
-test_data = data_batches[test_idxs,...]
-test_label = label_batches[test_idxs]
+train_data = np.concatenate(data_batch_list, 0)
+train_label = np.concatenate(label_batch_list, 0)
 print(train_data.shape, train_label.shape)
+
+
+path_test = os.path.join(path_data, 'test/h5')
+files_test = provider.getDataFiles(os.path.join(path_test, 'files.txt'))
+filelist_test = provider.getDataFiles(os.path.join(path_test, 'filelist.txt'))
+
+data_batch_list = []
+label_batch_list = []
+
+for h5_filename in files_test:
+    file_path = os.path.join(path_test, h5_filename)
+    data_batch, label_batch = provider.loadDataFile(file_path)
+    data_batch_list.append(data_batch)
+    label_batch_list.append(label_batch)
+test_data = np.concatenate(data_batch_list, 0)
+test_label = np.concatenate(label_batch_list, 0)
 print(test_data.shape, test_label.shape)
-
-
-
 
 def log_string(out_str):
     LOG_FOUT.write(out_str+'\n')
@@ -107,7 +111,7 @@ def get_learning_rate(batch):
                         DECAY_STEP,          # Decay step.
                         DECAY_RATE,          # Decay rate.
                         staircase=True)
-    learning_rate = tf.maximum(learning_rate, 0.00001) # CLIP THE LEARNING RATE!!
+    learning_rate = tf.maximum(learning_rate, 0.00001)  # CLIP THE LEARNING RATE!!
     return learning_rate        
 
 def get_bn_decay(batch):
@@ -216,8 +220,7 @@ def train_one_epoch(sess, ops, train_writer):
         feed_dict = {ops['pointclouds_pl']: current_data[start_idx:end_idx, :, :],
                      ops['labels_pl']: current_label[start_idx:end_idx],
                      ops['is_training_pl']: is_training,}
-        summary, step, _, loss_val, pred_val = sess.run([ops['merged'], ops['step'], ops['train_op'], ops['loss'], ops['pred']],
-                                         feed_dict=feed_dict)
+        summary, step, _, loss_val, pred_val = sess.run([ops['merged'], ops['step'], ops['train_op'], ops['loss'], ops['pred']], feed_dict=feed_dict)
         train_writer.add_summary(summary, step)
         pred_val = np.argmax(pred_val, 2)
         correct = np.sum(pred_val == current_label[start_idx:end_idx])
@@ -252,8 +255,7 @@ def eval_one_epoch(sess, ops, test_writer):
         feed_dict = {ops['pointclouds_pl']: current_data[start_idx:end_idx, :, :],
                      ops['labels_pl']: current_label[start_idx:end_idx],
                      ops['is_training_pl']: is_training}
-        summary, step, loss_val, pred_val = sess.run([ops['merged'], ops['step'], ops['loss'], ops['pred']],
-                                      feed_dict=feed_dict)
+        summary, step, loss_val, pred_val = sess.run([ops['merged'], ops['step'], ops['loss'], ops['pred']], feed_dict=feed_dict)
         test_writer.add_summary(summary, step)
         pred_val = np.argmax(pred_val, 2)
         correct = np.sum(pred_val == current_label[start_idx:end_idx])
@@ -268,7 +270,7 @@ def eval_one_epoch(sess, ops, test_writer):
             
     log_string('eval mean loss: %f' % (loss_sum / float(total_seen/NUM_POINT)))
     log_string('eval accuracy: %f'% (total_correct / float(total_seen)))
-    log_string('eval avg class acc: %f' % (np.mean(np.array(total_correct_class)/np.array(total_seen_class,dtype=np.float))))
+    log_string('eval avg class acc: %f' % (np.mean(np.array(total_correct_class)/np.array(total_seen_class, dtype=np.float))))
          
 
 

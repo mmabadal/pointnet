@@ -1,0 +1,1 @@
+/DATA/pipes/3d_pointnet/test_indoor/test/npy/hallway_6.npy
