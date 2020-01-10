@@ -8,7 +8,7 @@ sys.path.append(BASE_DIR)
 from model import *
 import indoor3d_util
 
-"python batch_inference.py --path_data a/b/c --path_cls meta/class_or.txt --model_path RUNS/test_indoor --dump_dir RUNS/test_indoor --room_data_filelist meta/test_indoor.txt --visu"
+"python batch_inference.py --path_data a/b/c --path_cls meta/class_or.txt --model_path RUNS/test_indoor --dump_dir RUNS/test_indoor --visu"
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--path_data', help='folder with train test data')
@@ -17,8 +17,6 @@ parser.add_argument('--gpu', type=int, default=0, help='GPU to use [default: GPU
 parser.add_argument('--batch_size', type=int, default=1, help='Batch Size during training [default: 1]')
 parser.add_argument('--num_point', type=int, default=4096, help='Point number [default: 4096]')
 parser.add_argument('--model_path', required=True, help='model checkpoint file path')
-parser.add_argument('--dump_dir', required=True, help='dump folder path')
-parser.add_argument('--room_data_filelist', required=True, help='TXT filename, filelist, each line is a test room data label file.')
 parser.add_argument('--no_clutter', action='store_true', help='If true, donot count the clutter class')
 parser.add_argument('--visu', action='store_true', help='Whether to output OBJ file for prediction visualization.')
 parsed_args = parser.parse_args()
@@ -32,11 +30,10 @@ BATCH_SIZE = parsed_args.batch_size
 NUM_POINT = parsed_args.num_point
 MODEL_PATH = os.path.join(parsed_args.model_path, "model.ckpt")
 GPU_INDEX = parsed_args.gpu
-DUMP_DIR = os.path.join(parsed_args.dump_dir, "dump")
+DUMP_DIR = os.path.join(parsed_args.model_path, "dump")
 if not os.path.exists(DUMP_DIR): os.mkdir(DUMP_DIR)
 LOG_FOUT = open(os.path.join(DUMP_DIR, 'log_evaluate.txt'), 'w')
 LOG_FOUT.write(str(parsed_args)+'\n')
-ROOM_PATH_LIST = [os.path.join(ROOT_DIR,line.rstrip()) for line in open(parsed_args.room_data_filelist)]
 
 path_test = os.path.join(path_data, 'test/npy')
 
@@ -118,7 +115,7 @@ def eval_one_epoch(sess, ops, room_path, out_data_label_filename, out_gt_label_f
     fout_data_label = open(out_data_label_filename, 'w')
     fout_gt_label = open(out_gt_label_filename, 'w')
     
-    current_data, current_label = indoor3d_util.room2blocks_wrapper_normalized(room_path, NUM_POINT)
+    current_data, current_label = indoor3d_util.room2blocks_wrapper_normalized(room_path, NUM_POINT, block_size=0.1, stride=0.1)
     current_data = current_data[:,0:NUM_POINT,:]
     current_label = np.squeeze(current_label)
     # Get room dimension..
@@ -129,6 +126,7 @@ def eval_one_epoch(sess, ops, room_path, out_data_label_filename, out_gt_label_f
     max_room_z = max(data[:,2])
     
     file_size = current_data.shape[0]
+    print("--------------- FILE SIZE: " + str(file_size))
     num_batches = file_size // BATCH_SIZE
     print(file_size)
 
