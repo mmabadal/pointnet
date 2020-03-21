@@ -13,11 +13,11 @@ import indoor3d_util
 '''
 Call:
 
-python npy_to_h5.py --path_in ../data/ply/ --path_out ../data/h5/
+python npy_to_h5.py --path_in ../data/npy/ --path_out ../data/h5/
 '''
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--path_in', help='path to the ply data folder.')
+parser.add_argument('--path_in', help='path to the npy data folder.')
 parser.add_argument('--path_out', help='path to save h5 folder.')
 
 parsed_args = parser.parse_args(sys.argv[1:])

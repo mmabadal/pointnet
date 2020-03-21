@@ -29,7 +29,7 @@ if not os.path.exists(path_out):
 
 for folder in natsorted(os.listdir(path_in)):
 
-    path_annotation = os.path.join(path_in, folder, "Annotations")
+    path_annotation = os.path.join(path_in, folder, "annotations")
     print(path_annotation)
 
     elements = path_annotation.split('/')
