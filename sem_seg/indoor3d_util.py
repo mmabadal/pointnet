@@ -351,7 +351,11 @@ def collect_bounding_box(anno_path, out_filename, cls_path):
     g_classes, g_class2label, g_label2color = get_info_classes(cls_path)
 
     for f in glob.glob(os.path.join(anno_path, '*.txt')):
-        cls = os.path.basename(f).split('_')[0]
+        bits = os.path.basename(f).split('_')
+        for bit in range(len(bits) - 2):
+            cls = cls + bits[bit] + "_"
+        cls = cls + bits[bit + 1]
+
         if cls not in g_classes: # note: in some room there is 'staris' class..
             cls = 'clutter'
         points = np.loadtxt(f)
