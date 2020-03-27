@@ -10,7 +10,7 @@ import indoor3d_util
 '''
 Call:
 
-python txt_to_npy.py --path_in ../data/txt/ --path_out ../data/ply/ --path_cls meta/class_names.txt
+python txt_to_npy.py --path_in ../data/txt/ --path_out ../data/npy/ --path_cls meta/class_names.txt
 '''
 
 parser = argparse.ArgumentParser()
