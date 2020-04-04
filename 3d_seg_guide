@@ -1,0 +1,34 @@
+-
+-
+-
+- apartados para obtener pcd
+-
+-
+-
+- pcd_to_ply.py
+
+- marcar gt en ply  -> terminar con ply general + annotation folder con cada uno de los elementos
+		    -> para conseguir floor, pasar general tambien por meshlab para que se formatee igual
+
+- ply_to_txt.py	    -> plyfile lo he tenido que instalar dentro de un anaconda envirnment
+
+- txt_to_npy.py	    -> las clases ahora se cogen de pointnet/sem_seg/meta/class_pipes.txt
+
+- npy_to_h5.py	    -> he cambiado ln116 de indoor3d_util.py añadiendo list() al range para poder concatenar
+
+- meter npy y h5 en set/test y set/train
+
+- python train.py --path_data /home/miguel/Desktop/data_test/set/ --cls 2 --log_dir RUNS/test --batch_size 10 --max_epoch 50
+		    -> importante batch y max_epoch, con batch 1 y epoch 20 no funcionó
+		    -> pip install tensorflow-gpu==1.14 -> esto hace que se tenga que ahcer fuera de cualquier anaconda environment
+
+- python batch_inference.py --path_data /home/miguel/Desktop/data_test/set/ --path_cls meta/class_pipes.txt --model_path RUNS/test/ --visu
+		    -> pip install tensorflow-gpu==1.14 -> esto hace que se tenga que ahcer fuera de cualquier anaconda environment
+
+
+----- arreglar/comprobar -----
+
+que pasa ahora con los ply de manuel aascii? caso 3 del general, 1 de la carpeta ahora de ubuntu en casa data_down -> resulta que funciona, sera el siguiente...? igualmente el caso 3 esta mal etiquetado
+por que ha fallado el primer entreno en casa? solo he cambiado txt, batch y epoch 
+
+
