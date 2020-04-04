@@ -26,9 +26,10 @@
 		    -> pip install tensorflow-gpu==1.14 -> esto hace que se tenga que ahcer fuera de cualquier anaconda environment
 
 
------ arreglar/comprobar -----
 
-que pasa ahora con los ply de manuel aascii? caso 3 del general, 1 de la carpeta ahora de ubuntu en casa data_down -> resulta que funciona, sera el siguiente...? igualmente el caso 3 esta mal etiquetado
-por que ha fallado el primer entreno en casa? solo he cambiado txt, batch y epoch 
+ ----  troubleshouting  ---- 
+
+mirar donde estan instaladas las cosas, quiza hay que hacer python3
+
 
 
