@@ -44,7 +44,14 @@ def collect_point_label(anno_path, out_filename, cls_path, file_format='txt'):
 
     
     for f in glob.glob(os.path.join(anno_path, '*.txt')):
-        cls = os.path.basename(f).split('_')[0]
+        name = os.path.basename(f).split('.')[0]
+        bits = name.split('_')
+        cls = ""
+        for i in range(len(bits)-1):
+            cls = cls + bits[i]
+            if i == len(bits)-2:
+                break
+            cls = cls + "_"
         points = np.loadtxt(f)
         labels = np.ones((points.shape[0],1)) * g_class2label[cls]
         points_list.append(np.concatenate([points, labels], 1)) # Nx7
@@ -351,10 +358,14 @@ def collect_bounding_box(anno_path, out_filename, cls_path):
     g_classes, g_class2label, g_label2color = get_info_classes(cls_path)
 
     for f in glob.glob(os.path.join(anno_path, '*.txt')):
-        bits = os.path.basename(f).split('_')
-        for bit in range(len(bits) - 2):
-            cls = cls + bits[bit] + "_"
-        cls = cls + bits[bit + 1]
+        name = os.path.basename(f).split('.')[0]
+        bits = name.split('_')
+        cls = ""
+        for i in range(len(bits)-1):
+            cls = cls + bits[i]
+            if i == len(bits)-2:
+                break
+            cls = cls + "_"
 
         if cls not in g_classes: # note: in some room there is 'staris' class..
             cls = 'clutter'
