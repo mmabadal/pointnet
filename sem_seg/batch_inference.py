@@ -7,6 +7,7 @@ ROOT_DIR = os.path.dirname(BASE_DIR)
 sys.path.append(BASE_DIR)
 from model import *
 import indoor3d_util
+import time
 
 "python batch_inference.py --path_data a/b/c --path_cls meta/class_or.txt --model_path RUNS/test_indoor --dump_dir RUNS/test_indoor --visu"
 
@@ -87,19 +88,34 @@ def evaluate():
     for root, dirs, files in os.walk(path_test):  # for each folder
 
         for file in enumerate(files):  # for each file in the folder
-            if re.search("\.(npy)$", file[1]):  # if the file is an image
+            if re.search("\.(npy)$", file[1]):  # if the file is a npy
                 filepath = os.path.join(root, file[1])  # file path
                 out_data_label_filename = os.path.basename(filepath)[:-4] + '_pred.txt'
                 out_data_label_filename = os.path.join(DUMP_DIR, out_data_label_filename)
                 out_gt_label_filename = os.path.basename(filepath)[:-4] + '_gt.txt'
                 out_gt_label_filename = os.path.join(DUMP_DIR, out_gt_label_filename)
                 print(filepath, out_data_label_filename)
+
+                start1 = time.time()
+
                 a, b = eval_one_epoch(sess, ops, filepath, out_data_label_filename, out_gt_label_filename)
+
+                done1 = time.time()
+                elapsed1 = done1 - start1
+                print("time1: " + str(elapsed1))
+
                 total_correct += a
                 total_seen += b
                 fout_out_filelist.write(out_data_label_filename+'\n')
     fout_out_filelist.close()
     log_string('all room eval accuracy: %f'% (total_correct / float(total_seen)))
+
+
+
+
+
+
+
 
 def eval_one_epoch(sess, ops, room_path, out_data_label_filename, out_gt_label_filename):
     error_cnt = 0
@@ -142,11 +158,18 @@ def eval_one_epoch(sess, ops, room_path, out_data_label_filename, out_gt_label_f
         loss_val, pred_val = sess.run([ops['loss'], ops['pred_softmax']],
                                       feed_dict=feed_dict)
 
+        start2 = time.time()
+
         if parsed_args.no_clutter:
             pred_label = np.argmax(pred_val[:,:,0:12], 2) # BxN
         else:
             pred_label = np.argmax(pred_val, 2) # BxN
         # Save prediction labels to OBJ file
+
+        done2 = time.time()
+        elapsed2 = done2 - start2
+        print("time2: " + str(elapsed2))
+
         for b in range(BATCH_SIZE):
             pts = current_data[start_idx+b, :, :]
             l = current_label[start_idx+b,:]
