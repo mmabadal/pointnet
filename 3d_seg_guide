@@ -18,11 +18,12 @@
 
 - meter npy y h5 en set/test y set/train
 
-- python train.py --path_data /home/miguel/Desktop/data_test/set/ --cls 2 --log_dir RUNS/test --batch_size 10 --max_epoch 50
+- python3 train.py --path_data /home/miguel/Desktop/data_test/set/ --cls 2 --log_dir RUNS/test --batch_size 10 --max_epoch 50
 		    -> importante batch y max_epoch, con batch 1 y epoch 20 no funcionó
 		    -> pip install tensorflow-gpu==1.14 -> esto hace que se tenga que ahcer fuera de cualquier anaconda environment
 
-- python batch_inference.py --path_data /home/miguel/Desktop/data_test/set/ --path_cls meta/class_pipes.txt --model_path RUNS/test/ --visu
+- python3 batch_inference.py --path_data /home/miguel/Desktop/data/valve_test/set/ --path_cls /home/miguel/Desktop/data/valve_test/classes.txt --model_path RUNS/valve_test/ --visu
+
 		    -> pip install tensorflow-gpu==1.14 -> esto hace que se tenga que ahcer fuera de cualquier anaconda environment
 
 
