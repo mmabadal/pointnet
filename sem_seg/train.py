@@ -17,7 +17,7 @@ import tf_util
 from model import *
 
 
-"RUN python train.py --path_data a/b/c --cls 13 --log_dir RUNS/a --batch_size 10 --max_epoch 50"
+"RUN python train.py --path_data a/b/c --cls 5 --log_dir RUNS/a --batch_size 10 --max_epoch 50"
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--path_data', help='folder with train test data')
@@ -54,7 +54,6 @@ os.system('cp train.py %s' % (LOG_DIR)) # bkp of train procedure
 LOG_FOUT = open(os.path.join(LOG_DIR, 'log_train.txt'), 'w')
 LOG_FOUT.write(str(parsed_args)+'\n')
 
-MAX_NUM_POINT = 4096
 NUM_CLASSES = cls
 BN_INIT_DECAY = 0.5
 BN_DECAY_DECAY_RATE = 0.5
