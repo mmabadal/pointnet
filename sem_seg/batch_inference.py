@@ -26,7 +26,6 @@ path_data = parsed_args.path_data
 path_cls = parsed_args.path_cls
 NUM_CLASSES = len(open(path_cls).readlines(  ))
 
-
 BATCH_SIZE = parsed_args.batch_size
 NUM_POINT = parsed_args.num_point
 MODEL_PATH = os.path.join(parsed_args.model_path, "model.ckpt")
@@ -37,7 +36,6 @@ LOG_FOUT = open(os.path.join(DUMP_DIR, 'log_evaluate.txt'), 'w')
 LOG_FOUT.write(str(parsed_args)+'\n')
 
 path_test = os.path.join(path_data, 'test/npy')
-
 
 def log_string(out_str):
     LOG_FOUT.write(out_str+'\n')
@@ -85,6 +83,8 @@ def evaluate():
 
     path_test = os.path.join(path_data, 'test/npy')
 
+    times = list()
+
     for root, dirs, files in os.walk(path_test):  # for each folder
 
         for file in enumerate(files):  # for each file in the folder
@@ -102,19 +102,19 @@ def evaluate():
 
                 done1 = time.time()
                 elapsed1 = done1 - start1
-                print("time1: " + str(elapsed1))
+                times.append(elapsed1)
 
                 total_correct += a
                 total_seen += b
                 fout_out_filelist.write(out_data_label_filename+'\n')
+
+    avg = sum(times)/len(times)
+    fps = 1/avg
+
     fout_out_filelist.close()
-    log_string('all room eval accuracy: %f'% (total_correct / float(total_seen)))
-
-
-
-
-
-
+    log_string('all room eval accuracy: %f' % (total_correct / float(total_seen)))
+    log_string('average inference time: %f' % avg)
+    log_string('fps: %f' % fps)
 
 
 def eval_one_epoch(sess, ops, room_path, out_data_label_filename, out_gt_label_filename):
@@ -146,7 +146,8 @@ def eval_one_epoch(sess, ops, room_path, out_data_label_filename, out_gt_label_f
     num_batches = file_size // BATCH_SIZE
     print(file_size)
 
-    
+    # start2 = time.time()
+ 
     for batch_idx in range(num_batches):
         start_idx = batch_idx * BATCH_SIZE
         end_idx = (batch_idx+1) * BATCH_SIZE
@@ -157,18 +158,12 @@ def eval_one_epoch(sess, ops, room_path, out_data_label_filename, out_gt_label_f
                      ops['is_training_pl']: is_training}
         loss_val, pred_val = sess.run([ops['loss'], ops['pred_softmax']],
                                       feed_dict=feed_dict)
-
-        start2 = time.time()
-
         if parsed_args.no_clutter:
             pred_label = np.argmax(pred_val[:,:,0:12], 2) # BxN
         else:
             pred_label = np.argmax(pred_val, 2) # BxN
         # Save prediction labels to OBJ file
 
-        done2 = time.time()
-        elapsed2 = done2 - start2
-        print("time2: " + str(elapsed2))
 
         for b in range(BATCH_SIZE):
             pts = current_data[start_idx+b, :, :]
@@ -198,6 +193,9 @@ def eval_one_epoch(sess, ops, room_path, out_data_label_filename, out_gt_label_f
                 l = current_label[i, j]
                 total_seen_class[l] += 1
                 total_correct_class[l] += (pred_label[i-start_idx, j] == l)
+
+    #done2 = time.time()
+    #elapsed2 = done2 - start2
 
     log_string('eval mean loss: %f' % (loss_sum / float(total_seen/NUM_POINT)))
     log_string('eval accuracy: %f'% (total_correct / float(total_seen)))
