@@ -15,7 +15,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--path_data', help='folder with train test data')
 parser.add_argument('--path_cls', help='path to classes txt.')
 parser.add_argument('--gpu', type=int, default=0, help='GPU to use [default: GPU 0]')
-parser.add_argument('--batch_size', type=int, default=1, help='Batch Size during training [default: 1]')
+parser.add_argument('--batch_size', type=int, default=24, help='Batch Size during training [default: 24]')
 parser.add_argument('--num_point', type=int, default=4096, help='Point number [default: 4096]')
 parser.add_argument('--model_path', required=True, help='model checkpoint file path')
 parser.add_argument('--no_clutter', action='store_true', help='If true, donot count the clutter class')
@@ -96,13 +96,13 @@ def evaluate():
                 out_gt_label_filename = os.path.join(DUMP_DIR, out_gt_label_filename)
                 print(filepath, out_data_label_filename)
 
-                start1 = time.time()
+                start = time.time()
 
                 a, b = eval_one_epoch(sess, ops, filepath, out_data_label_filename, out_gt_label_filename)
 
-                done1 = time.time()
-                elapsed1 = done1 - start1
-                times.append(elapsed1)
+                done = time.time()
+                elapsed = done - start
+                times.append(elapsed)
 
                 total_correct += a
                 total_seen += b
@@ -146,7 +146,6 @@ def eval_one_epoch(sess, ops, room_path, out_data_label_filename, out_gt_label_f
     num_batches = file_size // BATCH_SIZE
     print(file_size)
 
-    # start2 = time.time()
  
     for batch_idx in range(num_batches):
         start_idx = batch_idx * BATCH_SIZE
@@ -193,9 +192,6 @@ def eval_one_epoch(sess, ops, room_path, out_data_label_filename, out_gt_label_f
                 l = current_label[i, j]
                 total_seen_class[l] += 1
                 total_correct_class[l] += (pred_label[i-start_idx, j] == l)
-
-    #done2 = time.time()
-    #elapsed2 = done2 - start2
 
     log_string('eval mean loss: %f' % (loss_sum / float(total_seen/NUM_POINT)))
     log_string('eval accuracy: %f'% (total_correct / float(total_seen)))
