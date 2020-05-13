@@ -181,18 +181,46 @@ def train():
                'merged': merged,
                'step': batch}
 
+        loss_t_list = list()
+        loss_val_list = list()
+        acc_t_list = list()
+        acc_val_list = list()
+
         for epoch in range(MAX_EPOCH):
             log_string('**** EPOCH %03d ****' % (epoch))
             sys.stdout.flush()
              
-            train_one_epoch(sess, ops, train_writer)
-            eval_one_epoch(sess, ops, test_writer)
-            
-            # Save the variables to disk.
-            if epoch % 10 == 0:
-                save_path = saver.save(sess, os.path.join(LOG_DIR, "model.ckpt"))
-                log_string("Model saved in file: %s" % save_path)
+            loss_t, acc_t = train_one_epoch(sess, ops, train_writer)
+            loss_t_list.append(loss_t)
+            acc_t_list.append(acc_t)
 
+            loss_val, acc_val = eval_one_epoch(sess, ops, test_writer)
+            loss_val_list.append(loss_val)
+            acc_val_list.append(acc_val)
+            
+            stop = early_stopping(loss_t_list, loss_val_list, 0.4)
+            if stop:
+                log_string('early stopping at epoch %03d' % (epoch))
+                break
+        
+
+        # Save the variables to disk. 
+        save_path = saver.save(sess, os.path.join(LOG_DIR, "model.ckpt"))
+        log_string("Model saved in file: %s" % save_path)
+
+def early_stopping(t_loss, v_loss, thr):
+
+    stop = False
+
+    if len(t_loss) > 9:
+
+        a = 100 * ((v_loss[-1] / min(v_loss)) - 1)
+        b = 1000 * ((sum(t_loss[-10:]) / (10 * min(t_loss[-10:]))) - 1)
+        ab = a / b
+
+        if ab > thr:
+            stop = True
+    return stop
 
 
 def train_one_epoch(sess, ops, train_writer):
@@ -226,8 +254,13 @@ def train_one_epoch(sess, ops, train_writer):
         total_seen += (BATCH_SIZE*NUM_POINT)
         loss_sum += loss_val
     
-    log_string('mean loss: %f' % (loss_sum / float(num_batches)))
-    log_string('accuracy: %f' % (total_correct / float(total_seen)))
+    mean_loss = loss_sum / float(num_batches)
+    accuracy = total_correct / float(total_seen)
+
+    log_string('mean loss: %f' % (mean_loss))
+    log_string('accuracy: %f' % (accuracy))
+
+    return mean_loss, accuracy
 
         
 def eval_one_epoch(sess, ops, test_writer):
@@ -266,9 +299,16 @@ def eval_one_epoch(sess, ops, test_writer):
                 total_seen_class[l] += 1
                 total_correct_class[l] += (pred_val[i-start_idx, j] == l)
             
-    log_string('eval mean loss: %f' % (loss_sum / float(total_seen/NUM_POINT)))
-    log_string('eval accuracy: %f'% (total_correct / float(total_seen)))
+    
+    mean_loss = loss_sum / float(total_seen/NUM_POINT)
+    accuracy = total_correct / float(total_seen)
+    
+    
+    log_string('eval mean loss: %f' % (mean_loss))
+    log_string('eval accuracy: %f'% (accuracy))
     log_string('eval avg class acc: %f' % (np.mean(np.array(total_correct_class)/np.array(total_seen_class, dtype=np.float))))
+
+    return mean_loss, accuracy
          
 
 
