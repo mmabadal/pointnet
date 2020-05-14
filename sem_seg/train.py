@@ -198,15 +198,18 @@ def train():
             loss_val, acc_val = eval_one_epoch(sess, ops, test_writer)
             loss_val_list.append(loss_val)
             acc_val_list.append(acc_val)
-            
-            stop = early_stopping(loss_t_list, loss_val_list, 0.4)
-            if stop:
-                sess = last_sess
-                log_string('early stopping at epoch %03d' % (epoch-1))
-                break
-            last_sess = sess
-        
 
+            if loss_val == min(loss_val_list):
+                best_sess = sess
+                best_epoch = epoch
+
+            stop = early_stopping(loss_t_list, loss_val_list, 2)
+            if stop:
+                log_string('early stopping at epoch %03d' % (best_epoch))
+                break
+
+        sess = best_sess
+        
         # Save the variables to disk. 
         save_path = saver.save(sess, os.path.join(LOG_DIR, "model.ckpt"))
         log_string("Model saved in file: %s" % save_path)
