@@ -186,7 +186,10 @@ def train():
         acc_t_list = list()
         acc_val_list = list()
 
+        a = 0
+
         for epoch in range(MAX_EPOCH):
+            a = a+1
             log_string('**** EPOCH %03d ****' % (epoch))
             sys.stdout.flush()
              
@@ -198,17 +201,19 @@ def train():
             loss_val_list.append(loss_val)
             acc_val_list.append(acc_val)
             
-            stop = early_stopping(loss_t_list, loss_val_list, 0.4)
+            stop = early_stopping(loss_t_list, loss_val_list, 0.4,a)
             if stop:
-                log_string('early stopping at epoch %03d' % (epoch))
+                sess = last_sess
+                log_string('early stopping at epoch %03d' % (epoch-1))
                 break
+            last_sess = sess
         
 
         # Save the variables to disk. 
         save_path = saver.save(sess, os.path.join(LOG_DIR, "model.ckpt"))
         log_string("Model saved in file: %s" % save_path)
 
-def early_stopping(t_loss, v_loss, thr):
+def early_stopping(t_loss, v_loss, thr,a):
 
     stop = False
 
@@ -218,8 +223,12 @@ def early_stopping(t_loss, v_loss, thr):
         b = 1000 * ((sum(t_loss[-10:]) / (10 * min(t_loss[-10:]))) - 1)
         ab = a / b
 
+        if a == 3:
+            stop = True
+
         if ab > thr:
             stop = True
+
     return stop
 
 
