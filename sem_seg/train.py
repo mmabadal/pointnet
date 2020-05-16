@@ -80,7 +80,7 @@ train_label = np.concatenate(label_batch_list, 0)
 print(train_data.shape, train_label.shape)
 
 
-path_test = os.path.join(path_data, 'test/h5')
+path_test = os.path.join(path_data, 'val/h5')
 files_test = provider.getDataFiles(os.path.join(path_test, 'files.txt'))
 filelist_test = provider.getDataFiles(os.path.join(path_test, 'filelist.txt'))
 
@@ -166,7 +166,7 @@ def train():
         merged = tf.summary.merge_all()
         train_writer = tf.summary.FileWriter(os.path.join(LOG_DIR, 'train'),
                                   sess.graph)
-        test_writer = tf.summary.FileWriter(os.path.join(LOG_DIR, 'test'))
+        test_writer = tf.summary.FileWriter(os.path.join(LOG_DIR, 'val'))
 
         # Init variables
         init = tf.global_variables_initializer()
