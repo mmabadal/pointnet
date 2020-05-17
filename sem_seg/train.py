@@ -203,7 +203,7 @@ def train():
                 best_sess = sess
                 best_epoch = epoch
 
-            stop = early_stopping(loss_t_list, loss_val_list, 2)
+            stop = early_stopping(loss_t_list, loss_val_list, 1)
             if stop:
                 log_string('early stopping at epoch %03d' % (best_epoch))
                 break
