@@ -19,14 +19,14 @@ python npy_to_h5.py --path_in ../data/npy/ --path_out ../data/h5/
 parser = argparse.ArgumentParser()
 parser.add_argument('--path_in', help='path to the npy data folder.')
 parser.add_argument('--path_out', help='path to save h5 folder.')
-parser.add_argument('--points', default=4096, help='numpoints.')
+parser.add_argument('--num_point', default=4096, help='num points per block.')
 
 
 parsed_args = parser.parse_args(sys.argv[1:])
 
 path_in = parsed_args.path_in
 path_out = parsed_args.path_out
-NUM_POINT = int(parsed_args.points)
+NUM_POINT = int(parsed_args.num_point)
 
 
 if not os.path.exists(path_out):
