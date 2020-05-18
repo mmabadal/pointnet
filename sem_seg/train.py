@@ -205,10 +205,12 @@ def train():
 
             stop = early_stopping(loss_t_list, loss_val_list, 1)
             if stop:
-                log_string('early stopping at epoch %03d' % (best_epoch))
+                log_string('early stopping')
                 break
 
         sess = best_sess
+        log_string('save session at epoch %03d' % (best_epoch))
+
         
         # Save the variables to disk. 
         save_path = saver.save(sess, os.path.join(LOG_DIR, "model.ckpt"))
