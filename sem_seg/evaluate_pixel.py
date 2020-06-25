@@ -7,6 +7,7 @@ import sys
 from natsort import natsorted
 from sklearn.preprocessing import normalize
 import pandas as pd
+from natsort import natsorted
 
 '''
 script to evaluate a model
@@ -37,20 +38,22 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--path_runs', help='path to the folder.')
     parser.add_argument('--path_cls', help='path to the folder.')
+    parser.add_argument('--folder_infer', default="dump", help='name of infered folder.')
     parsed_args = parser.parse_args(sys.argv[1:])
 
     path_runs = parsed_args.path_runs
     path_cls = parsed_args.path_cls  # get class txt path
+    folder_infer = parsed_args.folder_infer  
 
     run_folders = listdir(path_runs)
 
-    for run in run_folders:
+    for run in natsorted(run_folders):
 
         print("evaluating run: " + run)
 
         path_run = os.path.join(path_runs,run)
 
-        path_infer = os.path.join(path_run, 'dump')
+        path_infer = os.path.join(path_run, folder_infer)
 
         classes, labels, label2color = get_info_classes(path_cls)
 
@@ -126,7 +129,7 @@ def main():
             f.write(str_rec + '\n\n')
         f.close()
 
-        filepath = path_run + '/evaluation_pixel.xlsx'
+        filepath = path_run + '/evaluation_pixel_illetes_ontop.xlsx'
         df = pd.DataFrame.from_records(cnf_matrix, index=classes)
         df.to_excel(filepath, header = classes, index_label = 'gt\pred')
 
