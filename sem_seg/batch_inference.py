@@ -128,6 +128,7 @@ def eval_one_epoch(sess, ops, room_path, out_data_label_filename, out_gt_label_f
     if parsed_args.visu:
         fout = open(os.path.join(DUMP_DIR, os.path.basename(room_path)[:-4]+'_pred.obj'), 'w')
         fout_gt = open(os.path.join(DUMP_DIR, os.path.basename(room_path)[:-4]+'_gt.obj'), 'w')
+        fout_base = open(os.path.join(DUMP_DIR, os.path.basename(room_path)[:-4]+'_base.obj'), 'w')
     fout_data_label = open(out_data_label_filename, 'w')
     fout_gt_label = open(out_gt_label_filename, 'w')
     
@@ -181,6 +182,7 @@ def eval_one_epoch(sess, ops, room_path, out_data_label_filename, out_gt_label_f
                 if parsed_args.visu:
                     fout.write('v %f %f %f %d %d %d\n' % (pts[i,6], pts[i,7], pts[i,8], color[0], color[1], color[2]))
                     fout_gt.write('v %f %f %f %d %d %d\n' % (pts[i,6], pts[i,7], pts[i,8], color_gt[0], color_gt[1], color_gt[2]))
+                    fout_base.write('v %f %f %f %d %d %d\n' % (pts[i,6], pts[i,7], pts[i,8],  pts[i,3], pts[i,4], pts[i,5]))
                 fout_data_label.write('%f %f %f %d %d %d %f %d\n' % (pts[i,6], pts[i,7], pts[i,8], pts[i,3], pts[i,4], pts[i,5], pred_val[b,i,pred[i]], pred[i]))
                 fout_gt_label.write('%d\n' % (l[i]))
         correct = np.sum(pred_label == current_label[start_idx:end_idx,:])
@@ -200,6 +202,7 @@ def eval_one_epoch(sess, ops, room_path, out_data_label_filename, out_gt_label_f
     if parsed_args.visu:
         fout.close()
         fout_gt.close()
+        fout_base.close()
     return total_correct, total_seen
 
 
