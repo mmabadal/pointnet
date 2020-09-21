@@ -7,13 +7,12 @@ import sys
 from natsort import natsorted
 from sklearn.preprocessing import normalize
 import pandas as pd
-from natsort import natsorted
 
 '''
 script to evaluate a model
 
 execution example:
- - python3 evaluate_pixel.py --path_run "/home/miguel/Desktop/pipes/dgcnn/sem_seg/RUNS/valve_test/" --path_cls "/home/miguel/Desktop/pipes/data/valve_test/classes.txt"
+ - python3 evaluate_pixel.py --path_runs "/home/miguel/Desktop/pipes/dgcnn/sem_seg/RUNS/valve_test/" --path_cls "/home/miguel/Desktop/pipes/data/valve_test/classes.txt" --test_name pool
 '''
 
 def get_info_classes(cls_path):
@@ -38,22 +37,22 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--path_runs', help='path to the folder.')
     parser.add_argument('--path_cls', help='path to the folder.')
-    parser.add_argument('--folder_infer', default="dump", help='name of infered folder.')
+    parser.add_argument('--test_name', help='name of the test')
     parsed_args = parser.parse_args(sys.argv[1:])
 
+    test_name = parsed_args.test_name
     path_runs = parsed_args.path_runs
     path_cls = parsed_args.path_cls  # get class txt path
-    folder_infer = parsed_args.folder_infer  
 
     run_folders = listdir(path_runs)
 
-    for run in natsorted(run_folders):
+    for run in run_folders:
 
         print("evaluating run: " + run)
 
         path_run = os.path.join(path_runs,run)
 
-        path_infer = os.path.join(path_run, folder_infer)
+        path_infer = os.path.join(path_run, "dump_" + test_name)
 
         classes, labels, label2color = get_info_classes(path_cls)
 
@@ -61,6 +60,7 @@ def main():
         cases = [s for s in files if s.endswith(".txt")]
         names = natsorted(set([re.split("[.\_]+",string)[0] for string in cases]))
         names = names[:-2]
+        names.append("23_2")
 
         n_classes = len(classes)
         cnf_matrix = np.zeros((n_classes, n_classes), dtype=int)
@@ -110,7 +110,7 @@ def main():
         cnf_norm_h_s = np.array_str(cnf_norm_h)
         cnf_norm_v_s = np.array_str(cnf_norm_v)
 
-        f = open(path_run + '/evaluation.txt', 'w')
+        f = open(path_run + '/evaluation_pixel_' + test_name + '.txt', 'w')
         f.write('\n')
         f.write('Confusion matrix \n\n')
         f.write(cnf_matrix_s + '\n\n')
@@ -129,7 +129,7 @@ def main():
             f.write(str_rec + '\n\n')
         f.close()
 
-        filepath = path_run + '/evaluation_pixel_illetes_ontop.xlsx'
+        filepath = path_run + '/evaluation_pixel_' + test_name + '.xlsx'
         df = pd.DataFrame.from_records(cnf_matrix, index=classes)
         df.to_excel(filepath, header = classes, index_label = 'gt\pred')
 
