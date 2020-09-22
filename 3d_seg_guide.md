@@ -17,6 +17,7 @@ https://medium.com/repro-repo/install-cuda-and-cudnn-for-tensorflow-gpu-on-ubunt
 
 - marcar gt en ply  -> terminar con ply general + annotation folder con cada uno de los elementos
 		    -> para conseguir floor, pasar general tambien por meshlab para que se formatee igual
+		    -> plyfile lo he tenido que instalar dentro de un anaconda envirnment
 
 - ply_to_txt.py	    -> plyfile lo he tenido que instalar dentro de un anaconda envirnment
 
@@ -33,7 +34,7 @@ https://medium.com/repro-repo/install-cuda-and-cudnn-for-tensorflow-gpu-on-ubunt
 		    -> importante batch y max_epoch, con batch 1 y epoch 20 no funcionó
 		    -> pip install tensorflow-gpu==1.14 -> esto hace que se tenga que ahcer fuera de cualquier anaconda environment
 
-- python3 batch_inference.py --path_data /home/miguel/Desktop/data/valve_test/set/ --path_cls /home/miguel/Desktop/data/valve_test/classes.txt --model_path RUNS/valve_test/ --visu
+- python3 batch_inference.py --path_data /home/miguel/Desktop/data/valve_test/set/test/npy --path_cls /home/miguel/Desktop/data/valve_test/classes.txt --model_path RUNS/valve_test/ --visu --test_name "xxxx"
 
 		    -> pip install tensorflow-gpu==1.14 -> esto hace que se tenga que ahcer fuera de cualquier anaconda environment
 
