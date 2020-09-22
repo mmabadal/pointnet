@@ -60,7 +60,6 @@ def main():
         cases = [s for s in files if s.endswith(".txt")]
         names = natsorted(set([re.split("[.\_]+",string)[0] for string in cases]))
         names = names[:-2]
-        names.append("23_2")
 
         n_classes = len(classes)
         cnf_matrix = np.zeros((n_classes, n_classes), dtype=int)

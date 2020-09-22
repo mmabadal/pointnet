@@ -9,7 +9,7 @@ from model import *
 import indoor3d_util
 import time
 
-"python batch_inference.py --path_data a/b/c --path_cls meta/class_or.txt --model_path RUNS/test_indoor --dump_dir RUNS/test_indoor --visu"
+"python batch_inference.py --path_data a/b/c --path_cls meta/class_or.txt --model_path RUNS/test_indoor --dump_dir RUNS/test_indoor --test_name aaaaa/bbb  --visu"
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--path_data', help='folder with train test data')
@@ -20,22 +20,24 @@ parser.add_argument('--num_point', type=int, default=4096, help='Point number [d
 parser.add_argument('--model_path', required=True, help='model checkpoint file path')
 parser.add_argument('--no_clutter', action='store_true', help='If true, donot count the clutter class')
 parser.add_argument('--visu', action='store_true', help='Whether to output OBJ file for prediction visualization.')
+parser.add_argument('--test_name', help='name of the test')
 parsed_args = parser.parse_args()
 
 path_data = parsed_args.path_data
 path_cls = parsed_args.path_cls
 NUM_CLASSES = len(open(path_cls).readlines(  ))
 
+test_name = parsed_args.test_name
 BATCH_SIZE = parsed_args.batch_size
 NUM_POINT = parsed_args.num_point
 MODEL_PATH = os.path.join(parsed_args.model_path, "model.ckpt")
 GPU_INDEX = parsed_args.gpu
-DUMP_DIR = os.path.join(parsed_args.model_path, "dump")
+DUMP_DIR = os.path.join(parsed_args.model_path, "dump_" + test_name)
 if not os.path.exists(DUMP_DIR): os.mkdir(DUMP_DIR)
 LOG_FOUT = open(os.path.join(DUMP_DIR, 'log_evaluate.txt'), 'w')
 LOG_FOUT.write(str(parsed_args)+'\n')
 
-path_test = os.path.join(path_data, 'test/npy')
+path_test = path_data
 
 def log_string(out_str):
     LOG_FOUT.write(out_str+'\n')
@@ -81,7 +83,7 @@ def evaluate():
     output_filelist = os.path.join(DUMP_DIR, "output_filelist.txt")
     fout_out_filelist = open(output_filelist, 'w')
 
-    path_test = os.path.join(path_data, 'test/npy')
+    path_test = path_data
 
     times = list()
 
