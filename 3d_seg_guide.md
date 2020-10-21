@@ -7,7 +7,7 @@ https://medium.com/repro-repo/install-cuda-and-cudnn-for-tensorflow-gpu-on-ubunt
 - cuda: cat /usr/local/cuda/version.txt -> CUDA Version 9.0.176
 - cudnn: cat /usr/include/cudnn.h | grep CUDNN_MAJOR -A 2 -> #define CUDNN_MAJOR 7 #define CUDNN_MINOR 0 #define CUDNN_PATCHLEVEL 5
 
-
+- pip install tensorflow-gpu==1.14 -> esto hace que se tenga que ahcer fuera de cualquier anaconda environment
 
 # get data
 
