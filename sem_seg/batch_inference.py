@@ -18,7 +18,6 @@ parser.add_argument('--gpu', type=int, default=0, help='GPU to use [default: GPU
 parser.add_argument('--batch_size', type=int, default=24, help='Batch Size during training [default: 24]')
 parser.add_argument('--num_point', type=int, default=4096, help='Point number [default: 4096]')
 parser.add_argument('--model_path', required=True, help='model checkpoint file path')
-parser.add_argument('--no_clutter', action='store_true', help='If true, donot count the clutter class')
 parser.add_argument('--visu', action='store_true', help='Whether to output OBJ file for prediction visualization.')
 parser.add_argument('--test_name', help='name of the test')
 parsed_args = parser.parse_args()
@@ -160,10 +159,7 @@ def eval_one_epoch(sess, ops, room_path, out_data_label_filename, out_gt_label_f
                      ops['is_training_pl']: is_training}
         loss_val, pred_val = sess.run([ops['loss'], ops['pred_softmax']],
                                       feed_dict=feed_dict)
-        if parsed_args.no_clutter:
-            pred_label = np.argmax(pred_val[:,:,0:12], 2) # BxN
-        else:
-            pred_label = np.argmax(pred_val, 2) # BxN
+        pred_label = np.argmax(pred_val, 2) # BxN
         # Save prediction labels to OBJ file
 
 
