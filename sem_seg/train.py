@@ -17,10 +17,8 @@ import tf_util
 from model import *
 
 
-"RUN python train.py --path_data a/b/c --cls 5 --log_dir RUNS/a --batch_size 10 --max_epoch 50"
-
 parser = argparse.ArgumentParser()
-parser.add_argument('--path_data', help='folder with train test data')
+parser.add_argument('--path_data', help='folder with train val data')
 parser.add_argument('--cls', type=int, help='number of classes')
 parser.add_argument('--gpu', type=int, default=0, help='GPU to use [default: GPU 0]')
 parser.add_argument('--log_dir', default='log', help='Log dir [default: log]')
@@ -33,6 +31,8 @@ parser.add_argument('--optimizer', default='adam', help='adam or momentum [defau
 parser.add_argument('--decay_step', type=int, default=300000, help='Decay step for lr decay [default: 300000]')
 parser.add_argument('--decay_rate', type=float, default=0.5, help='Decay rate for lr decay [default: 0.5]')
 parsed_args = parser.parse_args()
+
+
 
 path_data = parsed_args.path_data
 cls = parsed_args.cls
@@ -62,10 +62,8 @@ BN_DECAY_CLIP = 0.99
 
 HOSTNAME = socket.gethostname()
 
-# ------------------------ OK ------------------------
 path_train = os.path.join(path_data, 'train/h5')
 files_train = provider.getDataFiles(os.path.join(path_train, 'files.txt'))
-filelist_train = provider.getDataFiles(os.path.join(path_train, 'filelist.txt'))
 
 data_batch_list = []
 label_batch_list = []
@@ -81,20 +79,19 @@ print(train_data.shape, train_label.shape)
 
 
 path_val = os.path.join(path_data, 'val/h5')
-files_test = provider.getDataFiles(os.path.join(path_val, 'files.txt'))
-filelist_test = provider.getDataFiles(os.path.join(path_val, 'filelist.txt'))
+files_val = provider.getDataFiles(os.path.join(path_val, 'files.txt'))
 
 data_batch_list = []
 label_batch_list = []
 
-for h5_filename in files_test:
-    file_path = os.path.join(path_test, h5_filename)
+for h5_filename in files_val:
+    file_path = os.path.join(path_val, h5_filename)
     data_batch, label_batch = provider.loadDataFile(file_path)
     data_batch_list.append(data_batch)
     label_batch_list.append(label_batch)
-test_data = np.concatenate(data_batch_list, 0)
-test_label = np.concatenate(label_batch_list, 0)
-print(test_data.shape, test_label.shape)
+val_data = np.concatenate(data_batch_list, 0)
+val_label = np.concatenate(label_batch_list, 0)
+print(val_data.shape, val_label.shape)
 
 def log_string(out_str):
     LOG_FOUT.write(out_str+'\n')
@@ -166,7 +163,7 @@ def train():
         merged = tf.summary.merge_all()
         train_writer = tf.summary.FileWriter(os.path.join(LOG_DIR, 'train'),
                                   sess.graph)
-        test_writer = tf.summary.FileWriter(os.path.join(LOG_DIR, 'val'))
+        val_writer = tf.summary.FileWriter(os.path.join(LOG_DIR, 'val'))
 
         # Init variables
         init = tf.global_variables_initializer()
@@ -195,7 +192,7 @@ def train():
             loss_t_list.append(loss_t)
             acc_t_list.append(acc_t)
 
-            loss_val, acc_val = eval_one_epoch(sess, ops, test_writer)
+            loss_val, acc_val = eval_one_epoch(sess, ops, val_writer)
             loss_val_list.append(loss_val)
             acc_val_list.append(acc_val)
 
@@ -272,7 +269,7 @@ def train_one_epoch(sess, ops, train_writer):
     return mean_loss, accuracy
 
         
-def eval_one_epoch(sess, ops, test_writer):
+def eval_one_epoch(sess, ops, val_writer):
     """ ops: dict mapping from string to tf ops """
     is_training = False
     total_correct = 0
@@ -282,8 +279,8 @@ def eval_one_epoch(sess, ops, test_writer):
     total_correct_class = [0 for _ in range(NUM_CLASSES)]
     
     log_string('----')
-    current_data = test_data[:,0:NUM_POINT,:]
-    current_label = np.squeeze(test_label)
+    current_data = val_data[:,0:NUM_POINT,:]
+    current_label = np.squeeze(val_label)
     
     file_size = current_data.shape[0]
     num_batches = file_size // BATCH_SIZE
@@ -296,7 +293,7 @@ def eval_one_epoch(sess, ops, test_writer):
                      ops['labels_pl']: current_label[start_idx:end_idx],
                      ops['is_training_pl']: is_training}
         summary, step, loss_val, pred_val = sess.run([ops['merged'], ops['step'], ops['loss'], ops['pred']], feed_dict=feed_dict)
-        test_writer.add_summary(summary, step)
+        val_writer.add_summary(summary, step)
         pred_val = np.argmax(pred_val, 2)
         correct = np.sum(pred_val == current_label[start_idx:end_idx])
         total_correct += correct

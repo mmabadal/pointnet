@@ -15,7 +15,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--path_data', help='folder with train test data')
 parser.add_argument('--path_cls', help='path to classes txt.')
 parser.add_argument('--gpu', type=int, default=0, help='GPU to use [default: GPU 0]')
-parser.add_argument('--batch_size', type=int, default=24, help='Batch Size during training [default: 24]')
+parser.add_argument('--batch_size', type=int, default=32, help='Batch Size during training [default: 32]')
 parser.add_argument('--num_point', type=int, default=4096, help='Point number [default: 4096]')
 parser.add_argument('--model_path', required=True, help='model checkpoint file path')
 parser.add_argument('--visu', action='store_true', help='Whether to output OBJ file for prediction visualization.')
@@ -123,6 +123,7 @@ def eval_one_epoch(sess, ops, room_path, out_data_label_filename, out_gt_label_f
     loss_sum = 0
     total_seen_class = [0 for _ in range(NUM_CLASSES)]
     total_correct_class = [0 for _ in range(NUM_CLASSES)]
+
     if parsed_args.visu:
         fout = open(os.path.join(DUMP_DIR, os.path.basename(room_path)[:-4]+'_pred.obj'), 'w')
         fout_gt = open(os.path.join(DUMP_DIR, os.path.basename(room_path)[:-4]+'_gt.obj'), 'w')
@@ -156,10 +157,10 @@ def eval_one_epoch(sess, ops, room_path, out_data_label_filename, out_gt_label_f
                      ops['is_training_pl']: is_training}
         loss_val, pred_val = sess.run([ops['loss'], ops['pred_softmax']],
                                       feed_dict=feed_dict)
+
         pred_label = np.argmax(pred_val, 2) # BxN
+
         # Save prediction labels to OBJ file
-
-
         for b in range(BATCH_SIZE):
             pts = current_data[start_idx+b, :, :]
             l = current_label[start_idx+b,:]
@@ -168,8 +169,8 @@ def eval_one_epoch(sess, ops, room_path, out_data_label_filename, out_gt_label_f
             pts[:,8] *= max_room_z
             pts[:,3:6] *= 255.0
             pred = pred_label[b, :]
-            for i in range(NUM_POINT):
 
+            for i in range(NUM_POINT):
                 g_classes, g_class2label, g_label2color = indoor3d_util.get_info_classes(path_cls)
                 color = g_label2color[pred[i]]
                 color_gt = g_label2color[current_label[start_idx+b, i]]
@@ -178,8 +179,10 @@ def eval_one_epoch(sess, ops, room_path, out_data_label_filename, out_gt_label_f
                     fout.write('v %f %f %f %d %d %d\n' % (pts[i,6], pts[i,7], pts[i,8], color[0], color[1], color[2]))
                     fout_gt.write('v %f %f %f %d %d %d\n' % (pts[i,6], pts[i,7], pts[i,8], color_gt[0], color_gt[1], color_gt[2]))
                     fout_base.write('v %f %f %f %d %d %d\n' % (pts[i,6], pts[i,7], pts[i,8],  pts[i,3], pts[i,4], pts[i,5]))
+                
                 fout_data_label.write('%f %f %f %d %d %d %f %d\n' % (pts[i,6], pts[i,7], pts[i,8], pts[i,3], pts[i,4], pts[i,5], pred_val[b,i,pred[i]], pred[i]))
                 fout_gt_label.write('%d\n' % (l[i]))
+                
         correct = np.sum(pred_label == current_label[start_idx:end_idx,:])
         total_correct += correct
         total_seen += (cur_batch_size*NUM_POINT)
