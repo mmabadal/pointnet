@@ -1,17 +1,16 @@
 
 # installation
 
-https://medium.com/repro-repo/install-cuda-and-cudnn-for-tensorflow-gpu-on-ubuntu-79306e4ac04e
+https://medium.com/repro-repo/install-cuda-and-cudnn-for-tensorflow-gpu-on-ubuntu-79306e4ac04e (SEE BELOW)
 
 - drivers: NVIDIA binary driver - version 384.130 from nvidia-384 (proprietary, tested)
 - cuda: cat /usr/local/cuda/version.txt -> CUDA Version 9.0.176
 - cudnn: cat /usr/include/cudnn.h | grep CUDNN_MAJOR -A 2 -> #define CUDNN_MAJOR 7 #define CUDNN_MINOR 0 #define CUDNN_PATCHLEVEL 5
-
 - pip install tensorflow-gpu==1.14 -> esto hace que se tenga que ahcer fuera de cualquier anaconda environment
 
 # get data
 
-- apartados para obtener pcd
+- rosrun pcl_ros pointcloud_to_pcd input:=/stereo_narrow/points2 (ejecutar desde el folder donde se van a guardar las pc)
 
 - pcd_to_ply.py
 
@@ -29,15 +28,9 @@ https://medium.com/repro-repo/install-cuda-and-cudnn-for-tensorflow-gpu-on-ubunt
 
 
 # train and infer
+- python3 train.py --path_data /home/miguel/Desktop/data/valve/train_val_test/sets/kfold/set_base/1/ --cls 5 --log_dir RUNS/k_fold/base/1
 
-- python3 train.py --path_data /home/miguel/Desktop/data_test/set/ --cls 2 --log_dir RUNS/test --batch_size 10 --max_epoch 50
-		    -> importante batch y max_epoch, con batch 1 y epoch 20 no funcionó
-		    -> pip install tensorflow-gpu==1.14 -> esto hace que se tenga que ahcer fuera de cualquier anaconda environment
-
-- python3 batch_inference.py --path_data /home/miguel/Desktop/data/valve_test/set/test/npy --path_cls /home/miguel/Desktop/data/valve_test/classes.txt --model_path RUNS/valve_test/ --visu --test_name "xxxx"
-
-		    -> pip install tensorflow-gpu==1.14 -> esto hace que se tenga que ahcer fuera de cualquier anaconda environment
-
+- python3 batch_inference.py --path_data /home/miguel/Desktop/data/valve/test/pool/ --path_cls /home/miguel/Desktop/data/valve/classes.txt --model_path RUNS/k_fold/base/1/ --test_name "pool" --visu 
 
 # troubleshouting
 
