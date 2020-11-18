@@ -36,14 +36,12 @@ if not os.path.exists(DUMP_DIR): os.mkdir(DUMP_DIR)
 LOG_FOUT = open(os.path.join(DUMP_DIR, 'log_evaluate.txt'), 'w')
 LOG_FOUT.write(str(parsed_args)+'\n')
 
-path_test = path_data
-
 def log_string(out_str):
     LOG_FOUT.write(out_str+'\n')
     LOG_FOUT.flush()
     print(out_str)
 
-def evaluate():
+def evaluate(path_data):
     is_training = False
      
     with tf.device('/gpu:'+str(GPU_INDEX)):
@@ -82,7 +80,7 @@ def evaluate():
     output_filelist = os.path.join(DUMP_DIR, "output_filelist.txt")
     fout_out_filelist = open(output_filelist, 'w')
 
-    path_test = path_data
+    path_test = os.path.join(path_data, 'npy')
 
     times = list()
 
@@ -91,7 +89,6 @@ def evaluate():
         for root, dirs, files in os.walk(path_test):  # for each folder
 
             for file in enumerate(files):  # for each file in the folder
-                log_string(file)
                 filepath = os.path.join(root, file[1])  # file path
 
                 if re.search("\.(npy)$", file[1]):  # if the file is a npy
@@ -112,7 +109,7 @@ def evaluate():
                     times.append(elapsed)
                     log_string('time: %f'% (elapsed))
                 
-                os.remove(filepath)
+                    os.remove(filepath)
 
 
 
@@ -204,5 +201,5 @@ def eval_one_epoch(sess, ops, room_path, out_data_label_filename, out_gt_label_f
 
 if __name__=='__main__':
     with tf.Graph().as_default():
-        evaluate()
+        evaluate(path_data)
     LOG_FOUT.close()
