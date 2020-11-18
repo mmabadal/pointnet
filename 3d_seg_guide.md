@@ -20,17 +20,38 @@ https://medium.com/repro-repo/install-cuda-and-cudnn-for-tensorflow-gpu-on-ubunt
 
 - ply_to_txt.py	    -> plyfile lo he tenido que instalar dentro de un anaconda envirnment
 
-- txt_to_npy.py	    -> las clases ahora se cogen de pointnet/sem_seg/meta/class_pipes.txt
+- txt_to_npy.py
 
 - npy_to_h5.py	    -> he cambiado ln116 de indoor3d_util.py añadiendo list() al range para poder concatenar
 
 - meter npy y h5 en set/test y set/train
 
 
-# train and infer
-- python3 train.py --path_data /home/miguel/Desktop/data/valve/train_val_test/sets/kfold/set_base/1/ --cls 5 --log_dir RUNS/k_fold/base/1
+train: pcd -> ply -> txt -> npy -> h5
+val: pcd -> ply -> txt -> npy -> h5
+test: pcd -> ply -> txt -> npy -> h5
 
-- python3 batch_inference.py --path_data /home/miguel/Desktop/data/valve/test/pool/ --path_cls /home/miguel/Desktop/data/valve/classes.txt --model_path RUNS/k_fold/base/1/ --test_name "pool" --visu 
+# data management
+
+data
+  classes.txt
+  train_val
+    train
+      h5
+    val
+      h5
+  test
+    test1
+      npy
+    ...
+  
+
+# train and infer
+- python3 train.py --path_data Desktop/data/train_val/ --cls 5 --log_dir RUNS/run_x
+
+- python3 batch_inference.py --path_data Desktop/data/test/test1/ --path_cls Desktop/data/classes.txt --model_path RUNS/run_x/ --test_name "test1" --batch_size 8 --visu 
+
+- python3 batch_inference_online.py --path_data Desktop/data/test/test_online/ --path_cls Desktop/data/valve/classes.txt --model_path RUNS/run_x/ --test_name "test_online" --batch_size 8 --out
 
 # troubleshouting
 
