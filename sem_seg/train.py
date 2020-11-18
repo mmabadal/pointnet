@@ -80,9 +80,9 @@ train_label = np.concatenate(label_batch_list, 0)
 print(train_data.shape, train_label.shape)
 
 
-path_test = os.path.join(path_data, 'val/h5')
-files_test = provider.getDataFiles(os.path.join(path_test, 'files.txt'))
-filelist_test = provider.getDataFiles(os.path.join(path_test, 'filelist.txt'))
+path_val = os.path.join(path_data, 'val/h5')
+files_test = provider.getDataFiles(os.path.join(path_val, 'files.txt'))
+filelist_test = provider.getDataFiles(os.path.join(path_val, 'filelist.txt'))
 
 data_batch_list = []
 label_batch_list = []
