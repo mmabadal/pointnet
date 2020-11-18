@@ -9,7 +9,7 @@ from model import *
 import indoor3d_util
 import time
 
-"python batch_inference.py --path_data a/b/c --path_cls meta/class_or.txt --model_path RUNS/test_indoor --dump_dir RUNS/test_indoor --test_name aaaaa/bbb  --visu"
+"python batch_inference.py --path_data a/b/c --path_cls meta/class_or.txt --model_path RUNS/test_indoor --dump_dir RUNS/test_indoor --test_name aaaaa/bbb --visu"
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--path_data', help='folder with train test data')
@@ -179,10 +179,9 @@ def eval_one_epoch(sess, ops, room_path, out_data_label_filename, out_gt_label_f
                     fout.write('v %f %f %f %d %d %d\n' % (pts[i,6], pts[i,7], pts[i,8], color[0], color[1], color[2]))
                     fout_gt.write('v %f %f %f %d %d %d\n' % (pts[i,6], pts[i,7], pts[i,8], color_gt[0], color_gt[1], color_gt[2]))
                     fout_base.write('v %f %f %f %d %d %d\n' % (pts[i,6], pts[i,7], pts[i,8],  pts[i,3], pts[i,4], pts[i,5]))
-                
                 fout_data_label.write('%f %f %f %d %d %d %f %d\n' % (pts[i,6], pts[i,7], pts[i,8], pts[i,3], pts[i,4], pts[i,5], pred_val[b,i,pred[i]], pred[i]))
                 fout_gt_label.write('%d\n' % (l[i]))
-                
+
         correct = np.sum(pred_label == current_label[start_idx:end_idx,:])
         total_correct += correct
         total_seen += (cur_batch_size*NUM_POINT)
@@ -195,12 +194,13 @@ def eval_one_epoch(sess, ops, room_path, out_data_label_filename, out_gt_label_f
 
     log_string('eval mean loss: %f' % (loss_sum / float(total_seen/NUM_POINT)))
     log_string('eval accuracy: %f'% (total_correct / float(total_seen)))
-    fout_data_label.close()
-    fout_gt_label.close()
+
     if parsed_args.visu:
         fout.close()
         fout_gt.close()
         fout_base.close()
+    fout_data_label.close()
+    fout_gt_label.close()
     return total_correct, total_seen
 
 
