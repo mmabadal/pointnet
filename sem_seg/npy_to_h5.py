@@ -13,7 +13,7 @@ import indoor3d_util
 '''
 Call:
 
-python npy_to_h5.py --path_in ../data/npy/ --path_out ../data/h5/
+sudo python npy_to_h5.py --path_in ../data/npy/ --path_out ../data/h5/ --num_point 4096
 '''
 
 parser = argparse.ArgumentParser()
