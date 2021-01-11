@@ -20,6 +20,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--path_in', help='path to the npy data folder.')
 parser.add_argument('--path_out', help='path to save h5 folder.')
 parser.add_argument('--num_point', default=4096, help='num points per block.')
+parser.add_argument('--block', default=0.1, help='block size.')
+parser.add_argument('--stride', default=0.1, help='stride size.')
 
 
 parsed_args = parser.parse_args(sys.argv[1:])
@@ -27,7 +29,8 @@ parsed_args = parser.parse_args(sys.argv[1:])
 path_in = parsed_args.path_in
 path_out = parsed_args.path_out
 NUM_POINT = int(parsed_args.num_point)
-
+block = float(parsed_args.block)
+stride = float(parsed_args.stride)
 
 if not os.path.exists(path_out):
     os.mkdir(path_out)
@@ -91,7 +94,7 @@ def insert_batch(data, label, last_batch=False):
 sample_cnt = 0
 for i, data_label_filename in enumerate(data_label_files):  # for npy
     print(data_label_filename)
-    data, label = indoor3d_util.room2blocks_wrapper_normalized(data_label_filename, NUM_POINT, block_size=0.1, stride=0.1,
+    data, label = indoor3d_util.room2blocks_wrapper_normalized(data_label_filename, NUM_POINT, block_size=block, stride=stride,
                                                  random_sample=False, sample_num=None)
     print('{0}, {1}'.format(data.shape, label.shape))
     for _ in range(data.shape[0]):
